@@ -1,0 +1,67 @@
+package root;
+
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+public class FluidWindow extends JFrame {
+	//// VARIABLES ------------------------------------------------------------
+	
+	// Interface Components
+	public FluidPanel _fluidPanel;
+	public JPanel _controlPanel;
+		public JButton _playbackButton;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public static void main(String[] args){
+		FluidWindow fw = new FluidWindow();
+	}
+	
+	public FluidWindow(){
+		init();
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		// Window Properties
+		this.setTitle("Incompressible Fluid Simulation");
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		this.setVisible(true);
+		
+		// Layout
+		this.setLayout(new BorderLayout());
+		
+		// Prepare Fluid
+		_fluidPanel = new FluidPanel();
+		this.add(_fluidPanel, BorderLayout.CENTER);
+		
+		// Control Panel
+		_controlPanel = new JPanel();
+		buildControlPanel();
+		this.add(_controlPanel, BorderLayout.EAST);
+	}
+	
+	public void buildControlPanel(){
+		// Layout
+		_controlPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = c.gridy = 0;
+		c.gridwidth = c.gridheight = 1;
+		c.insets = new Insets(10,10,10,10);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		
+		// Playback Button
+		_playbackButton = new JButton("Pause");
+		c.weighty = 1.0;
+		_controlPanel.add(_playbackButton,c);
+	}
+	
+	//// MISC -----------------------------------------------------------------
+}

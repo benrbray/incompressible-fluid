@@ -1,0 +1,120 @@
+package root;
+
+public class FluidField {
+	
+	private int _size;
+	private int _area;
+
+	private double[] _u;
+	private double[] _uo;
+	private double[] _v;
+	private double[] _vo;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public FluidField(int size){
+		_size = size;
+		_area = _size * _size;
+		
+		// Initialize Velocities
+		_u = new double[_area];
+		_uo = new double[_area];
+		_vo = new double[_area];
+		_v = new double[_area];
+		
+		for(int i = 0; i < _size; i++){
+			// Coordinates
+			double x = i % _size - 128;
+			double y = Math.floor(i/_size) - 128;
+			double r = Math.sqrt(x*x + y*y);
+			double u_x = x / r;
+			double u_y = y / r;
+			
+			
+			_u[i] = -u_y * 200 / Math.log(r);
+			_v[i] =  u_x * 200 / Math.log(r);//200 * (Math.random() - 0.5);
+			
+			if(x > 50 && x < 100 && y > 25 && y < 100){
+				this.density[i] = 1;
+			}
+		}
+		
+	}
+	
+	//// PRIMARY UPDATE -------------------------------------------------------
+	
+	
+	
+	//// ADVECTION ------------------------------------------------------------
+	
+	public double[] advect(double[] updated, double[] quantity, double dt, double[] u, double[] v){
+		
+		return newQuantity;
+	}
+	
+	/*
+	 * this.advect = function(updated, quantity, dt, u, v) {
+		//console.log("Advect", this.height, this.width);
+		var index = 0;
+		var prevX;
+		var prevY;
+		
+		var top;
+		var bot;
+		var left;
+		var right;
+		
+		var fracX;
+		var fracY;
+		
+		var tl;
+		var tr;
+		var bl;
+		var br;
+		
+		var blerpLeft;
+		var blerpRight;
+		
+		var blerp;
+		
+		for(var y = 0; y < this.height; y++){
+			for(var x = 0; x < this.width; x++){
+				prevX = x - u[index] * dt;
+				prevY = y - v[index] * dt;
+				
+				// Corner coordinates
+				top = Math.floor(prevY);
+				bot = top + 1;
+				left = Math.floor(prevX);
+				right = left + 1;
+				
+				fracX = prevX - left;
+				fracY = prevY - top;
+				
+				// Wrap & compute indecies
+				top = (top & fluidMod) * fluidWidth;
+				bot = (bot & fluidMod) * fluidWidth;
+				left = left & fluidMod;
+				right = right & fluidMod;
+				
+				// Evaluate Corners
+				tl = quantity[top + left];
+				tr = quantity[top + right];
+				bl = quantity[bot + left];
+				br = quantity[bot + right];
+				
+				// Blerp
+				blerpLeft = tl + fracY*(bl-tl);
+				blerpRight = tr + fracY*(br-tr);
+				blerp = blerpLeft + fracX*(blerpRight-blerpLeft);
+				
+				// Update
+				updated[index] = blerp;
+				index++;
+			}
+		}
+	}
+	 */
+	
+	//// RENDERING ------------------------------------------------------------
+}

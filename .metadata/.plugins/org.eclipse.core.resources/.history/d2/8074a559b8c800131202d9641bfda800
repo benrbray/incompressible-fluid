@@ -1,0 +1,294 @@
+package root;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.util.Arrays;
+
+import edu.emory.mathcs.jtransforms.fft.DoubleFFT_2D;
+import edu.emory.mathcs.jtransforms.fft.RealFFTUtils_2D;
+
+public class FluidField {
+	
+	private int _size;
+	private int _area;
+	
+	private double[] _addField;
+
+	private double[] _u;
+	private double[] _uo;
+	private double[] _v;
+	private double[] _vo;
+
+	private double[] _d;
+	private double[] _do;
+	
+	private double[] _au;
+	private double[] _av;
+	
+	private int MOD;
+	
+	private DoubleFFT_2D _fft;
+	private RealFFTUtils_2D _fftUtils;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public FluidField(int size){
+		_size = size;
+		_area = _size * _size;
+		MOD = 1 << (int)(Math.log10(size)/Math.log(2) - 1);
+		
+		// Initialize Velocities
+		_u  = new double[_area*2];
+		_uo = new double[_area*2];
+		_v  = new double[_area*2];
+		_vo = new double[_area*2];
+		_d  = new double[_area];
+		_do = new double[_area];
+
+		_au = new double[_area];
+		_av = new double[_area];
+		
+		for(int i = 0; i < _area; i++){
+			// Coordinates
+			double x = mod(i,_size) - 128;
+			double y = Math.floor(i/_size) - 128;
+			double r = Math.sqrt(x*x + y*y);
+			double u_x = (r==0 ? 0 : x/r);
+			double u_y = (r==0 ? 0 : y/r);
+			
+			_u[i] =  (r==0 ? 0 : (-u_y * 200) );
+			_v[i] =  (r==0 ? 0 : ( u_x * 200) );//200 * (Math.random() - 0.5);
+			
+			if(x > 20 && x < 100 && y > -20 && y < 20){
+				_d[i] = 1.0;
+			}
+		}
+		
+		// FFT
+		_fft = new DoubleFFT_2D(_size, _size);
+		_fftUtils = new RealFFTUtils_2D(_size, _size);
+	}
+	
+	//// PRIMARY UPDATE -------------------------------------------------------
+	
+	public void update(double dt){
+		double[] temp;
+		
+		// Advect Density
+		temp = _d; _d = _do; _do = temp;
+		this.advect(_d, _do, dt, _u, _v);
+		
+		addForce(_u, _au);	// u += au (resets au)
+		addForce(_v, _av);  // v += av (resets av)
+		
+		// Advect X Velocity
+		//temp = _u; _u = _uo; _uo = temp;
+		//this.advect(_u, _uo, dt, _uo, _vo);
+		
+		// Advect Y Velocity
+		//temp = _v; _v = _vo; _vo = temp;
+		//this.advect(_v, _vo, dt, _uo, _vo);
+		
+		// FFT
+		project(dt);
+	}
+	
+	public void project(double dt){
+		_fft.realForwardFull(_u);
+		_fft.realForwardFull(_v);
+		
+		double r,f;
+		double u_re, u_im, v_re, v_im;
+		int index;
+		
+		for(int y = 1; y < _size/2; y++){
+			for(int x = 1; x < _size; x++){
+				r = x*x + y*y;
+				if(r==0) continue;
+				
+				index = _fftUtils.getIndex(y, x);
+				u_re = _u[index];
+				u_im = _u[index+1];	//_fftUtils.unpack(y, x, _u, 1);
+				v_re = _v[index];	//_fftUtils.unpack(y, x, _v, 0);
+				v_im = _v[index+1];	//_fftUtils.unpack(y, x, _v, 1);
+				
+				/*f = 1.0;//1.0/(1 + r*dt*0.1);
+
+				u_re = f * ( (1-x*x/r) * u_re   - x*y / r * v_re );
+				u_im = f * ( (1-x*x/r) * u_im   - x*y / r * v_im );
+				
+				v_re = f * (    -y*x/r * u_re + (1-y*y/r) * v_re );
+				v_im = f * (     y*x/r * u_im + (1-y*y/r) * v_im );*/
+				
+				if (r > 0.f) {
+					double rkk = 1f / r;
+					// Real portion of velocity projection
+					double rkp = (x * u_re + y * v_re);
+					// Imaginary portion of velocity projection
+					double ikp = (x * u_im + y * v_im);
+					u_re -= rkk * rkp * x;
+					u_im -= rkk * ikp * x;
+					u_re -= rkk * rkp * y;
+					u_im -= rkk * ikp * y;
+				}
+				
+
+				_u[index] 	= u_re;	//_fftUtils.pack(u_re, y, x, _u, 0);
+				_u[index+1] = u_im;	//_fftUtils.pack(u_im, y, x, _u, 1);
+				_v[index] 	= v_re;	//_fftUtils.pack(v_re, y, x, _v, 0);
+				_v[index+1] = v_im;	//_fftUtils.pack(v_im, y, x, _v, 1);
+			}
+		}
+		
+		_fft.realInverseFull(_u, true);
+		_fft.realInverseFull(_v, true);
+	}
+	
+	//// ADVECTION ------------------------------------------------------------
+	
+	public double[] advect(double[] updated, double[] quantity, double dt, double[] u, double[] v){
+		int index = 0;
+		
+		double prevX,prevY;			// backprojection
+		double fracX,fracY;			// fractional part
+		int    top,bot,left,right;	// blerp
+		double tl,tr,bl,br;			// blerp
+		double blerpLeft,blerpRight;// blerp
+		double blerp;
+		
+		for(int y = 0; y < _size; y++){
+			for(int x = 0; x < _size; x++){
+				prevX = x - u[index] * dt;
+				prevY = y - v[index] * dt;
+				
+				// Corner coordinates
+				top = (int)Math.floor(prevY);
+				bot = top + 1;
+				left = (int)Math.floor(prevX);
+				right = left + 1;
+				
+				fracX = prevX - left;
+				fracY = prevY - top;
+				
+				// Wrap & compute indecies
+				top = mod(top,_size)*_size;//(top & MOD) * _size;
+				bot = mod(bot,_size)*_size;//(bot & MOD) * _size;
+				left = mod(left,_size);//left & MOD;
+				right = mod(right,_size);//right & MOD;
+				
+				// Evaluate Corners
+				tl = quantity[top + left];
+				tr = quantity[top + right];
+				bl = quantity[bot + left];
+				br = quantity[bot + right];
+				
+				// Blerp
+				blerpLeft = tl + fracY*(bl-tl);
+				blerpRight = tr + fracY*(br-tr);
+				blerp = blerpLeft + fracX*(blerpRight-blerpLeft);
+				
+				// Update
+				updated[index] = blerp;
+				index++;
+			}
+		}
+		
+		return updated;
+	}
+	
+	public int mod(int a, int b){
+		return ((a % b) + b) % b;
+	}
+	
+	public float mod(float a, int b){
+		return ((a % b) + b) % b;
+	}
+	
+	//// INTERACTION ----------------------------------------------------------
+	
+	public void impulse(double fx, double fy, int x, int y){
+		int windowSize = 30;
+		int minx = (x-windowSize < 0      ? -x       : -windowSize);
+		int maxx = (x+windowSize >= _size ? _size-x   :  windowSize);
+		int miny = (y-windowSize < 0      ? -y       : -windowSize);
+		int maxy = (y+windowSize >= _size ? _size-y :  windowSize);
+		
+		double mag = Math.sqrt(fx*fx + fy*fy);
+		double ux = fx / mag;
+		double uy = fy / mag;
+		fx = (fx < 0 ? -fx : fx);
+		fy = (fy < 0 ? -fy : fy);
+		
+		fx = Math.sqrt(fx);
+		fy = Math.sqrt(fy);
+		
+		for(int i = minx; i<maxx; i++){
+			for(int j = miny; j<maxy; j++){
+				double r = Math.sqrt(i*i + j*j);
+				int index = (x+i) + _size*(y+j); 
+				_au[index] += 10 * ux * fx / (r+1);
+				_av[index] += 10 * uy * fy / (r+1);
+				
+				if(r<15){
+					_d[index] = Math.max(2, 5 / r);
+				}
+			}
+		}
+	}
+	
+	public void addForce(double[] source, double[] add){
+		for(int i = 0; i < _area; i++){
+			source[i] += add[i];
+			add[i] = 0;//((Math.random()*i)-i/2)/50000;
+		}
+	}
+	
+	//// RENDERING ------------------------------------------------------------
+	
+	public void renderVelocity(BufferedImage bi){
+		for(int x=0; x < _size; x++){
+			for(int y=0; y< _size; y++){
+				double velX = Math.abs(_u[x + _size * y]);
+				double velY = Math.abs(_v[x + _size * y]);
+				int red = (int) (velX / 100.0 * 255);
+				int green = (int) (velY / 100.0 * 255);
+				int blue = 0;
+				int rgb = (red<<16) | (green<<8) | blue;
+				bi.setRGB(x, y, rgb);
+			}
+		}
+	}
+	
+	public void renderDensity(BufferedImage bi){
+		for(int x=0; x < _size; x++){
+			for(int y=0; y< _size; y++){
+				double density = _d[x + _size * y];
+				density = density > 1 ? 1 : density;
+				int red = (int) (density * 255);
+				int blue = (int) (density * 255);
+				int green = (int) (density * 255);
+				int rgb = (red<<16) | (green<<8) | blue;
+				
+				bi.setRGB(x, y, rgb);
+			}
+		}
+	}
+	
+	public void renderFlow(BufferedImage bi){
+		Graphics2D g = bi.createGraphics();
+		g.setColor(new Color(1f, 1f, 1f, 0.5f));
+		for(int x=0; x < _size; x += 10){
+			for(int y=0; y < _size; y += 10){
+				double velX = (_u[x + _size * y]);
+				double velY = (_v[x + _size * y]);
+				double mag = Math.sqrt(velX*velX + velY*velY);
+				double ux = velX/mag;
+				double uy = velY/mag;
+				velX = Math.sqrt(Math.abs(velX));
+				velY = Math.sqrt(Math.abs(velY));
+				g.drawLine(x, y, x + (int)(ux*velX), y + (int)(uy*velY));
+			}
+		}
+	}
+}

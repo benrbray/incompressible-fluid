@@ -1,0 +1,27 @@
+package root;
+
+import javax.swing.JFrame;
+
+public class FluidWindow extends JFrame {
+	//// VARIABLES ------------------------------------------------------------
+	
+	// Interface Components
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public static void main(String[] args){
+		FluidWindow fw = new FluidWindow();
+	}
+	
+	public FluidWindow(){
+		
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		this.setSize()
+	}
+	
+	//// MISC -----------------------------------------------------------------
+}

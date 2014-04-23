@@ -1,0 +1,9 @@
+package root;
+
+public class FluidField {
+	float[][] u;
+	float[][] v;
+	public FluidField(int size){
+		
+	}
+}

@@ -1,0 +1,95 @@
+package root;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+
+import javax.swing.JFrame;
+import javax.swing.Timer;
+
+public class FluidMain extends JFrame implements ActionListener {
+	//// SIMULATION PROPERTIES ------------------------------------------------
+	
+	// Constants
+	public static final int FPS = 30;
+	public static final int DELAY = 1000 / FPS;
+	
+	public static final int FLUID_POWER = 8;
+	public static final int FLUID_SIZE = (1 << FLUID_POWER);
+	public static final int FRAME_SIZE = FLUID_SIZE;
+	
+	// Rendering
+	private BufferedImage _canvas;
+	private Timer _timer;
+	private boolean _rendering = false;
+	
+	// Fluid Field
+	private FluidField _fluid;
+	
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public static void main(String[] args){
+		FluidMain fm = new FluidMain();
+	}
+	
+	public FluidMain(){
+		init();
+		System.out.println(Math.floor(-5.2));
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		buildInterface();
+		
+		// Configure Canvas
+		_canvas = new BufferedImage(FLUID_SIZE, FLUID_SIZE, BufferedImage.TYPE_INT_RGB);
+		
+		// Fluid
+		_fluid = new FluidField(FLUID_SIZE);
+		
+		// Timer
+		_timer = new Timer(DELAY, this);
+		_timer.start();
+		
+		_rendering = true;
+	}
+	
+	public void buildInterface(){
+		this.setSize(FRAME_SIZE, FRAME_SIZE);
+		this.setTitle("Incompressible Fluid Simulation");
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		this.setResizable(false);
+		this.setVisible(true);
+	}
+	
+	//// UPDATE ---------------------------------------------------------------
+	
+	public void update(){
+		_fluid.update(0.01);
+	}
+	
+	//// RENDERING ------------------------------------------------------------
+	
+	public void paint(Graphics gr){
+		if(!_rendering) return;
+		
+		Graphics2D g = (Graphics2D)gr;
+
+		_canvas.flush();
+		_fluid.renderDensity(_canvas);
+		_fluid.renderFlow(_canvas);
+		
+		g.drawImage(_canvas, null, 0, 0);
+	}
+	
+	//// ACTIONLISTENER -------------------------------------------------------
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		update();
+		this.repaint();
+	}
+}

@@ -1,0 +1,32 @@
+package root;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+public class FluidWindow extends JFrame {
+	//// VARIABLES ------------------------------------------------------------
+	
+	// Dimensions
+	
+	// Interface Components
+	public FluidPanel _fluidPanel;
+	public JButton _playbackButton;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public static void main(String[] args){
+		FluidWindow fw = new FluidWindow();
+	}
+	
+	public FluidWindow(){
+		
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		this.setSize()
+	}
+	
+	//// MISC -----------------------------------------------------------------
+}

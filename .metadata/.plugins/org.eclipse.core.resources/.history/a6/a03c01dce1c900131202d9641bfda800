@@ -1,0 +1,186 @@
+package root;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+public class FluidPanel extends JPanel implements ActionListener {
+	//// SIMULATION PROPERTIES ------------------------------------------------
+	
+	// Time
+	private int _framerate = 30;
+	private int _timerDelay = 1000 / _framerate;
+	private double _timeStep = 0.005;
+	
+	// Fluid Dimensions
+	private int _fluidPower = 8;
+	private int _fluidSize = (1 << _fluidPower);
+	private double _frameScale = 2.0;
+	private int _frameSize = (int) (_fluidSize * _frameScale);
+	
+	// Rendering
+	private BufferedImage _canvas;
+	private BufferedImage _upscaled;
+	private Timer _timer;
+	private boolean _rendering = false;
+	private AffineTransform _imgScale;
+	private AffineTransformOp _imgScaleOp; 
+	
+	// Fluid Field
+	private FluidField _fluid;
+	
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public FluidPanel(){
+		init();
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		this.setScale(_frameScale);
+		this.setFluidPower(_fluidPower);
+		
+		// Timer
+		_timer = new Timer(_timerDelay, this);
+		_timer.start();
+		
+		// Add Listeners
+		this.addMouseListener(new MouseAdapter(){
+			public void mouseReleased(MouseEvent e) {
+				update();
+				//_fluid.project(_timeStep);
+			}
+		});
+		
+		// Mouse Motion Listener
+		this.addMouseMotionListener(new MouseMotionAdapter(){
+			int prevX = 0;
+			int prevY = 0;
+			
+			public void mouseMoved(MouseEvent e){
+				prevX = e.getX();
+				prevY = e.getY();
+			}
+			
+			public void mouseDragged(MouseEvent e) {
+				float diffX = e.getX() - prevX;
+				float diffY = e.getY() - prevY;
+				prevX = e.getX();
+				prevY = e.getY();
+
+				_fluid.impulse(diffX*10, diffY*10, (int)(prevX/_frameScale), (int)(prevY/_frameScale));
+			}
+		});
+		
+		// Key Listener
+		this.addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent e){
+				switch(e.getKeyCode()){
+				case KeyEvent.VK_SPACE:
+					_fluid.resetDensity();
+					break;
+				case KeyEvent.VK_R:
+					_fluid.resetVelocity();
+					break;
+				case KeyEvent.VK_A:
+					_fluid.randomVelocity();
+					break;
+				}
+			}
+		});
+
+		// Begin Rendering
+		_rendering = true;
+		
+	}
+	
+	//// RESET METHODS --------------------------------------------------------
+	
+	public void resetSize(){
+		if(_canvas != null) _canvas.flush();
+		_canvas = new BufferedImage(_fluidSize, _fluidSize, BufferedImage.TYPE_INT_RGB);
+		this.setSize(_frameSize, _frameSize);
+		this
+	}
+	
+	public void resetScaling(){
+		// Container for Scaled Image
+		if(_upscaled != null) _upscaled.flush();
+		_upscaled = new BufferedImage(_frameSize, _frameSize, BufferedImage.TYPE_INT_RGB);
+	}
+	
+	//// UPDATE ---------------------------------------------------------------
+	
+	public void update(){
+		_fluid.update(_timeStep);
+	}
+	
+	//// RENDERING ------------------------------------------------------------
+	
+	public void paint(Graphics gr){
+		if(!_rendering) return;
+		
+		Graphics2D g = (Graphics2D)gr;
+
+		_canvas.flush();
+		//_fluid.renderVelocity(_canvas);
+		_fluid.renderDensity(_canvas);
+		_fluid.renderFlow(_canvas);
+		
+		_imgScaleOp.filter(_canvas, _upscaled);
+		g.drawImage(_upscaled, null, 0, 0);
+		g.drawImage(_upscaled, null, _frameSize, 0);
+	}
+	
+	//// GETTER / SETTER METHODS ----------------------------------------------
+	
+	public void setFluidPower(int n){
+		if(n > 4 && n < 10){
+			// Dimensions
+			_fluidPower = n;
+			_fluidSize = (1 << _fluidPower);
+			_frameSize = (int) (_fluidSize * _frameScale);
+			
+			// Reset Canvas & Upscaled Canvas
+			resetSize();
+			resetScaling();
+			
+			// Fluid
+			_fluid = new FluidField(_fluidSize);
+		}
+	}
+	
+	public void setScale(double scale){
+		_frameScale = scale;
+		
+		// Image Scaling
+		_imgScale = new AffineTransform();
+		_imgScale.scale(_frameScale, _frameScale);
+		_imgScaleOp = new AffineTransformOp(_imgScale, AffineTransformOp.TYPE_BILINEAR);
+		
+		resetScaling();
+	}
+	
+	//// ACTIONLISTENER -------------------------------------------------------
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		update();
+		this.repaint();
+	}
+}

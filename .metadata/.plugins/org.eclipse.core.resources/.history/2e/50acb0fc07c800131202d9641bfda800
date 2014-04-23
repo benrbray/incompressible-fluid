@@ -1,0 +1,26 @@
+package root;
+
+public class FluidField {
+	
+	float[] u;
+	float[] v;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public FluidField(int size){
+		
+	}
+	
+	//// PRIMARY UPDATE -------------------------------------------------------
+	
+	
+	
+	//// ADVECTION ------------------------------------------------------------
+	
+	public float[] advect(float[] updated, float[] quantity, float dt, float[] u, float[] v){
+		
+		return newQuantity;
+	}
+	
+	//// RENDERING ------------------------------------------------------------
+}

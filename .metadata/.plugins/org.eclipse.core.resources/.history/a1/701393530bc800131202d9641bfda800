@@ -1,0 +1,148 @@
+package root;
+
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+
+public class FluidField {
+	
+	private int _size;
+	private int _area;
+
+	private double[] _u;
+	private double[] _uo;
+	private double[] _v;
+	private double[] _vo;
+	
+	private double[] _density;
+	
+	private int MOD;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public FluidField(int size){
+		_size = size;
+		_area = _size * _size;
+		MOD = 1 << (int)(Math.log10(size)/Math.log(2) - 1);
+		
+		// Initialize Velocities
+		_u  = new double[_area];
+		_uo = new double[_area];
+		_v  = new double[_area];
+		_vo = new double[_area];
+		
+		for(int i = 0; i < _size; i++){
+			// Coordinates
+			double x = i % _size - 128;
+			double y = Math.floor(i/_size) - 128;
+			double r = Math.sqrt(x*x + y*y);
+			double u_x = x / r;
+			double u_y = y / r;
+			
+			
+			_u[i] = -u_y * 200 / Math.log(r);
+			_v[i] =  u_x * 200 / Math.log(r);//200 * (Math.random() - 0.5);
+			
+			if(x > 50 && x < 100 && y > 25 && y < 100){
+				_density[i] = 1;
+			}
+		}
+		
+	}
+	
+	//// PRIMARY UPDATE -------------------------------------------------------
+	
+	public void update(double dt){
+		double[] temp;
+		
+		// Advect X Velocity
+		temp = _u; _u = _uo; _uo = temp;
+		this.advect(_u, _uo, dt, _uo, _vo);
+		
+		// Advect Y Velocity
+		temp = _v; _v = _vo; _vo = temp;
+		this.advect(_v, _vo, dt, _uo, _vo);
+		
+		// Advect Density
+		/*temp = this.density; this.density = this.density_old; this.density_old = temp;
+		this.advect(this.density, this.density_old, dt, this.u, this.v);*/
+	}
+	
+	//// ADVECTION ------------------------------------------------------------
+	
+	public double[] advect(double[] updated, double[] quantity, double dt, double[] u, double[] v){
+		int index = 0;
+		
+		double prevX,prevY;			// backprojection
+		double fracX,fracY;			// fractional part
+		int    top,bot,left,right;	// blerp
+		double tl,tr,bl,br;			// blerp
+		double blerpLeft,blerpRight;// blerp
+		double blerp;
+		
+		for(int y = 0; y < _size; y++){
+			for(int x = 0; x < _size; x++){
+				prevX = x - u[index] * dt;
+				prevY = y - v[index] * dt;
+				
+				// Corner coordinates
+				top = (int)Math.floor(prevY);
+				bot = top + 1;
+				left = (int)Math.floor(prevX);
+				right = left + 1;
+				
+				fracX = prevX - left;
+				fracY = prevY - top;
+				
+				// Wrap & compute indecies
+				top = (top & MOD) * _size;
+				bot = (bot & MOD) * _size;
+				left = left & MOD;
+				right = right & MOD;
+				
+				// Evaluate Corners
+				tl = quantity[top + left];
+				tr = quantity[top + right];
+				bl = quantity[bot + left];
+				br = quantity[bot + right];
+				
+				// Blerp
+				blerpLeft = tl + fracY*(bl-tl);
+				blerpRight = tr + fracY*(br-tr);
+				blerp = blerpLeft + fracX*(blerpRight-blerpLeft);
+				
+				// Update
+				updated[index] = blerp;
+				index++;
+			}
+		}
+		
+		return updated;
+	}
+	
+	//// RENDERING ------------------------------------------------------------
+	
+	public void renderVelocity(BufferedImage bi){
+		for(int x=0; x < _size; x++){
+			for(int y=0; y< _size; y++){
+				double velX = Math.abs(_u[x + _size * y]);
+				double velY = Math.abs(_v[x + _size * y]);
+				int red = (int) (velX / 100.0 * 255);
+				int green = (int) (velY / 100.0 * 255);
+				int blue = 0;
+				int rgb = (red<<16) | (green<<8) | blue;
+				bi.setRGB(x, y, rgb);
+			}
+		}
+	}
+	
+	public void renderFlow(Graphics2D g){
+		for(int x=0; x < _size; x += 10){
+			for(int y=0; y< _size; y += 10){
+				double velX = Math.abs(_u[x + _size * y]);
+				double velY = Math.abs(_v[x + _size * y]);
+				
+				bi.setRGB(x, y, rgb);
+			}
+		}
+	}
+}

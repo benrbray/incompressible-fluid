@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move element &apos;FluidMain.java&apos; to &apos;fluid-java/src/root&apos;&#x0D;&#x0A;- Original project: &apos;fluid-java&apos;&#x0D;&#x0A;- Destination element: &apos;fluid-java/src/root&apos;&#x0D;&#x0A;- Original element: &apos;FluidMain.java&apos;&#x0D;&#x0A;- Update references to refactored element" description="Move compilation unit" destination="/src&lt;root" element1="/src&lt;{FluidMain.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.move" policy="org.eclipse.jdt.ui.moveResources" qualified="false" references="true" stamp="1397942006756" units="1" version="1.0"/>
+</session>

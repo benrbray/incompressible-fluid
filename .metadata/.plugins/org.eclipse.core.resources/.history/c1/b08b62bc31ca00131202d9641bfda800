@@ -1,0 +1,101 @@
+package root;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
+public class FluidWindow extends JFrame {
+	//// VARIABLES ------------------------------------------------------------
+	
+	// Dimensions
+	public static final int FRAME_SIZE = 1 << 9;
+	
+	// Interface Components
+	public FluidPanel _fluidPanel;
+	public JPanel _controlPanel;
+		public JButton _playbackButton;
+		public JLabel _sizeLabel;
+		public JComboBox<Integer> _sizeCombo;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public static void main(String[] args){
+		FluidWindow fw = new FluidWindow();
+	}
+	
+	public FluidWindow(){
+		init();
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		buildInterface();
+	}
+	
+	public void buildInterface(){
+		// Window Properties
+		this.setTitle("Incompressible Fluid Simulation");
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		
+		// Layout
+		this.setLayout(new BorderLayout(10,10));
+		
+		// Prepare Fluid
+		_fluidPanel = new FluidPanel();
+		_fluidPanel.setPreferredSize(new Dimension(FRAME_SIZE, FRAME_SIZE));
+		this.add(_fluidPanel, BorderLayout.CENTER);
+		
+		// Control Panel
+		_controlPanel = new JPanel();
+		_controlPanel.setPreferredSize(new Dimension(150, FRAME_SIZE));
+		buildControlPanel();
+		this.add(_controlPanel, BorderLayout.EAST);
+		
+		// Set Visible
+		this.pack();
+		this.setVisible(true);
+		this.setResizable(false);
+	}
+	
+	public void buildControlPanel(){
+		// Layout
+		_controlPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = c.gridy = 0;
+		c.gridwidth = c.gridheight = 1;
+		c.weighty = c.weightx = 1.0;
+		c.insets = new Insets(10,10,10,10);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.anchor = GridBagConstraints.NORTH;
+		
+		// Misc
+		_controlPanel.setBorder(BorderFactory.createTitledBorder("Controls"));
+		
+		// Size Combo Box
+		String[] comboLabels = 
+		_sizeCombo = new JComboBox<Integer>(new Integer[]{4,5,6,7,8,9,10});
+		_sizeCombo.setModel(new DefaultComboBoxModel();
+		_controlPanel.add(_sizeCombo,c);
+		
+		// Playback Button
+		_playbackButton = new JButton("Pause");
+		c.gridy++;
+		_controlPanel.add(_playbackButton,c);
+	}
+	
+	//// MISC -----------------------------------------------------------------
+}

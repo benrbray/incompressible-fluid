@@ -1,0 +1,45 @@
+import javax.swing.JFrame;
+
+public class FluidMain extends JFrame {
+	//// SIMULATION PROPERTIES ------------------------------------------------
+	
+	// Constants
+	public static final int FLUID_POWER = 8;
+	public static final int FLUID_SIZE = (1 << FLUID_POWER);
+	public static final int FRAME_SIZE = FLUID_SIZE;
+	
+	// 
+	
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public static void main(String[] args){
+		FluidMain fm = new FluidMain();
+	}
+	
+	public FluidMain(){
+		init();
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		buildInterface();
+	}
+	
+	public void buildInterface(){
+		this.setSize(FRAME_SIZE);
+	}
+	
+	//// UPDATE ---------------------------------------------------------------
+	
+	public void update(){
+		
+	}
+	
+	//// RENDERING ------------------------------------------------------------
+	
+	public void render(){
+		
+	}
+}

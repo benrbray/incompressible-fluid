@@ -1,0 +1,11 @@
+import javax.swing.JFrame;
+
+public class FluidMain extends JFrame {
+	public static void main(String[] args){
+		
+	}
+	
+	public FluidMain(){
+		
+	}
+}

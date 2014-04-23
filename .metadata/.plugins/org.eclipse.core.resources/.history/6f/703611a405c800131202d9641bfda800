@@ -1,0 +1,31 @@
+import javax.swing.JFrame;
+
+public class FluidMain extends JFrame {
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public static void main(String[] args){
+		FluidMain fm = new FluidMain();
+	}
+	
+	public FluidMain(){
+		init();
+	}
+	
+	//// INITIALIZATION -------------------------------------------------------
+	
+	public void init(){
+		
+	}
+	
+	//// UPDATE ---------------------------------------------------------------
+	
+	public void update(){
+		
+	}
+	
+	//// RENDERING ------------------------------------------------------------
+	
+	public void render(){
+		
+	}
+}

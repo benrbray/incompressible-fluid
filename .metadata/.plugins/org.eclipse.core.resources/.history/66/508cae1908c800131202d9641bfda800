@@ -1,0 +1,94 @@
+package root;
+
+public class FluidField {
+	
+	private int _size;
+	
+	private float[] _u;
+	private float[] _v;
+	
+	//// CONSTRUCTOR ----------------------------------------------------------
+	
+	public FluidField(int size){
+		_size = size;
+		
+		_u = new float[];
+	}
+	
+	//// PRIMARY UPDATE -------------------------------------------------------
+	
+	
+	
+	//// ADVECTION ------------------------------------------------------------
+	
+	public float[] advect(float[] updated, float[] quantity, float dt, float[] u, float[] v){
+		
+		return newQuantity;
+	}
+	
+	/*
+	 * this.advect = function(updated, quantity, dt, u, v) {
+		//console.log("Advect", this.height, this.width);
+		var index = 0;
+		var prevX;
+		var prevY;
+		
+		var top;
+		var bot;
+		var left;
+		var right;
+		
+		var fracX;
+		var fracY;
+		
+		var tl;
+		var tr;
+		var bl;
+		var br;
+		
+		var blerpLeft;
+		var blerpRight;
+		
+		var blerp;
+		
+		for(var y = 0; y < this.height; y++){
+			for(var x = 0; x < this.width; x++){
+				prevX = x - u[index] * dt;
+				prevY = y - v[index] * dt;
+				
+				// Corner coordinates
+				top = Math.floor(prevY);
+				bot = top + 1;
+				left = Math.floor(prevX);
+				right = left + 1;
+				
+				fracX = prevX - left;
+				fracY = prevY - top;
+				
+				// Wrap & compute indecies
+				top = (top & fluidMod) * fluidWidth;
+				bot = (bot & fluidMod) * fluidWidth;
+				left = left & fluidMod;
+				right = right & fluidMod;
+				
+				// Evaluate Corners
+				tl = quantity[top + left];
+				tr = quantity[top + right];
+				bl = quantity[bot + left];
+				br = quantity[bot + right];
+				
+				// Blerp
+				blerpLeft = tl + fracY*(bl-tl);
+				blerpRight = tr + fracY*(br-tr);
+				blerp = blerpLeft + fracX*(blerpRight-blerpLeft);
+				
+				// Update
+				updated[index] = blerp;
+				index++;
+			}
+		}
+	}
+	 */
+	
+	//// RENDERING ------------------------------------------------------------
+}
